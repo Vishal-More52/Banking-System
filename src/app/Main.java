@@ -32,7 +32,7 @@ public class Main {
             switch (choice){
                 case  "0" -> running = false;
                 case "1" -> openAccount(scanner,bankService);
-                case "2" -> deposit(scanner);
+                case "2" -> deposit(scanner,bankService);
                 case "3" -> withdraw(scanner);
                 case "4" -> transfer(scanner);
                 case "5" -> statement(scanner);
@@ -51,16 +51,49 @@ public class Main {
         System.out.println("Account Type (SAVINGS/CURRENT: ");
         String type = scanner.nextLine().trim();
         System.out.println("Initial deposit (optional, blank for 0): ");
-        String amoutStr = scanner.nextLine().trim();
-        Double initial = Double.valueOf(amoutStr);
-        String accountNumber = bankService.openAccount(name,email,type);
-
+        String amountStr = scanner.nextLine().trim();
+        double initial = 0;
+        if (!amountStr.isEmpty()) {
+            try {
+                initial = Double.parseDouble(amountStr);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid number; opening with 0 balance.");
+            }
+        }
+        if (initial < 0) {
+            System.out.println("Initial deposit cannot be negative; using 0.");
+            initial = 0;
+        }
+        String accountNumber = bankService.openAccount(name, email, type);
+        if (initial > 0) {
+            try {
+                bankService.deposit(accountNumber, initial, "Initial Deposit");
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage());
+            }
+        }
         System.out.println("Account opened: " + accountNumber);
 
     }
 
-    private static void deposit(Scanner scanner) {
+    private static void deposit(Scanner scanner, BankService bankService) {
+        System.out.println("Account number: ");
+        String accountNumber = scanner.nextLine().trim();
+        System.out.println("Amount: ");
+        String amountStr = scanner.nextLine().trim();
+        try {
+            double parsed = Double.parseDouble(amountStr);
+            bankService.deposit(accountNumber, parsed, "Deposit");
+            System.out.println("Deposited");
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid amount.");
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
     }
+
 
     private static void withdraw(Scanner scanner) {
     }
