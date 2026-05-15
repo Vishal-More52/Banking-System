@@ -33,7 +33,7 @@ public class Main {
                 case  "0" -> running = false;
                 case "1" -> openAccount(scanner,bankService);
                 case "2" -> deposit(scanner,bankService);
-                case "3" -> withdraw(scanner);
+                case "3" -> withdraw(scanner,bankService);
                 case "4" -> transfer(scanner);
                 case "5" -> statement(scanner);
                 case "6" -> listAccounts(scanner,bankService);
@@ -95,7 +95,22 @@ public class Main {
     }
 
 
-    private static void withdraw(Scanner scanner) {
+    private static void withdraw(Scanner scanner, BankService bankService) {
+        System.out.println("Account number: ");
+        String accountNumber = scanner.nextLine().trim();
+        System.out.println("Amount: ");
+        String amountStr = scanner.nextLine().trim();
+        try {
+            double parsed = Double.parseDouble(amountStr);
+            bankService.withdraw(accountNumber, parsed, "Withdrawal");
+            System.out.println("Withdrawn");
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid amount.");
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     private static void transfer(Scanner scanner) {

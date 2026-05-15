@@ -55,5 +55,21 @@ private final TransactionRepository transactionRepository = new TransactionRepos
         transactionRepository.add(transaction);
     }
 
+    @Override
+    public void withdraw(String accountNumber, Double amount, String note) {
+        if (amount == null || amount <= 0) {
+            throw new IllegalArgumentException("Withdrawal amount must be a positive number.");
+        }
+        Account account = accountRepository.findByNumber(accountNumber)
+                .orElseThrow(() -> new RuntimeException("Account not found: " + accountNumber));
+        if (account.getBalance() < amount) {
+            throw new RuntimeException("Insufficient balance");
+        }
+        account.setBalance(account.getBalance() - amount);
+        Transaction transaction = new Transaction(UUID.randomUUID().toString(), Type.WITHDRAW,
+                account.getAccountNumber(), amount, LocalDateTime.now(), note);
+        transactionRepository.add(transaction);
+    }
+
 
 }
