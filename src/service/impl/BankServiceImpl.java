@@ -96,5 +96,12 @@ private final TransactionRepository transactionRepository = new TransactionRepos
 
     }
 
+    @Override
+    public List<Transaction> getStatement(String account) {
+        return transactionRepository.findByAccount(account).stream()
+                .sorted(Comparator.comparing(Transaction::getTimestamp))
+                .collect(Collectors.toList());
+    }
+
 
 }

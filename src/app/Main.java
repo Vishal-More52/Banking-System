@@ -3,6 +3,7 @@ package app;
 import service.BankService;
 import service.impl.BankServiceImpl;
 
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
@@ -124,6 +125,11 @@ public class Main {
     }
 
     private static void statement(Scanner scanner, BankService bankService) {
+        System.out.println("Account number: ");
+        String account = scanner.nextLine().trim();
+        bankService.getStatement(account).forEach(t -> {
+            System.out.println(t.getTimestamp() + " | " + t.getType() + " | " + t.getAmount() + " | " + t.getNote());
+        });
     }
 
     private static void listAccounts(Scanner scanner, BankService bankService) {
