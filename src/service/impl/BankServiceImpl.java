@@ -71,5 +71,30 @@ private final TransactionRepository transactionRepository = new TransactionRepos
         transactionRepository.add(transaction);
     }
 
+    @Override
+    public void transfer(String fromAcc, String toAcc, Double amount, String note) {
+        if (fromAcc.equals(toAcc))
+            throw new RuntimeException("Cannot transfer to your own account");
+        Account from = accountRepository.findByNumber(fromAcc)
+                .orElseThrow(() -> new RuntimeException("Account not found: " + fromAcc));
+        Account to = accountRepository.findByNumber(toAcc)
+                .orElseThrow(() -> new RuntimeException("Account not found: " + toAcc));
+        if (from.getBalance() < amount)
+            throw new RuntimeException("Insufficient Balance");
+
+        from.setBalance(from.getBalance() - amount);
+        to.setBalance(to.getBalance() + amount);
+
+        Transaction fromTransaction = new Transaction(UUID.randomUUID().toString(), Type.TRANSFER_OUT,
+                from.getAccountNumber(), amount, LocalDateTime.now(), note);
+        transactionRepository.add(fromTransaction);
+
+        Transaction toTransaction = new Transaction(UUID.randomUUID().toString(), Type.TRANSFER_IN,
+                to.getAccountNumber(), amount, LocalDateTime.now(), note);
+        transactionRepository.add(toTransaction);
+
+
+    }
+
 
 }
