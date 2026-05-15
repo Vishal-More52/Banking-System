@@ -1,5 +1,6 @@
 package app;
 
+import domain.Account;
 import service.BankService;
 import service.impl.BankServiceImpl;
 
@@ -30,15 +31,15 @@ public class Main {
             String choice = scanner.nextLine().trim();
             System.out.println("Choice : " + choice);
 
-            switch (choice){
-                case  "0" -> running = false;
-                case "1" -> openAccount(scanner,bankService);
-                case "2" -> deposit(scanner,bankService);
-                case "3" -> withdraw(scanner,bankService);
-                case "4" -> transfer(scanner,bankService);
-                case "5" -> statement(scanner,bankService);
-                case "6" -> listAccounts(scanner,bankService);
-                case "7" -> searchAccounts(scanner,bankService);
+            switch (choice) {
+                case "0" -> running = false;
+                case "1" -> openAccount(scanner, bankService);
+                case "2" -> deposit(scanner, bankService);
+                case "3" -> withdraw(scanner, bankService);
+                case "4" -> transfer(scanner, bankService);
+                case "5" -> statement(scanner, bankService);
+                case "6" -> listAccounts(scanner, bankService);
+                case "7" -> searchAccounts(scanner, bankService);
 
             }
         }
@@ -121,7 +122,7 @@ public class Main {
         String to = scanner.nextLine().trim();
         System.out.println("Amount: ");
         Double amount = Double.valueOf(scanner.nextLine().trim());
-        bankService.transfer(from, to , amount, "Transfer");
+        bankService.transfer(from, to, amount, "Transfer");
     }
 
     private static void statement(Scanner scanner, BankService bankService) {
@@ -139,5 +140,15 @@ public class Main {
     }
 
     private static void searchAccounts(Scanner scanner, BankService bankService) {
+        System.out.println("Customer name Contains: ");
+        String q = scanner.nextLine().trim();
+        List<Account> results = bankService.searchAccountByCustomerName(q);
+        if (results.isEmpty()) {
+            System.out.println("No accounts found.");
+            return;
+        }
+        results.forEach(account ->
+                System.out.println(account.getAccountNumber() + " | " + account.getAccountType() + " | " + account.getBalance())
+        );
     }
 }

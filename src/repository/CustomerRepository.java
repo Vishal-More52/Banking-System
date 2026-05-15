@@ -1,0 +1,21 @@
+package repository;
+
+import domain.Customer;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.List;
+
+public class CustomerRepository {
+    private final Map<String, Customer> customerById = new HashMap<>();
+
+
+    public List<Customer> findAll() {
+        return new ArrayList<>(customerById.values());
+    }
+
+    public void save(Customer c) {
+        customerById.put(c.getId(),c);
+    }
+}
