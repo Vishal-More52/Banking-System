@@ -28,25 +28,3 @@ bin/
 
 ### Mac OS ###
 .DS_Store
-
-### Compiled / runtime ###
-*.class
-*.log
-hs_err_pid*
-replay_pid*
-
-### Windows ###
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-### Local secrets (do not commit credentials) ###
-*.env
-.env
-local.properties
-secrets.properties
-
-### Build tools (if you add Maven or Gradle later) ###
-target/
-build/
-.gradle/

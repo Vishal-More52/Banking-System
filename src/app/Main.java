@@ -1,6 +1,8 @@
 package app;
 
 import domain.Account;
+import domain.Transaction;
+import exceptions.ValidationException;
 import service.BankService;
 import service.impl.BankServiceImpl;
 
@@ -12,143 +14,152 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         BankService bankService = new BankServiceImpl();
 
+        ConsoleUI.printBanner();
         boolean running = true;
 
-        System.out.println("Welcome to Console Bank");
         while (running) {
-            System.out.println("""
-                    1) Open Account
-                    2) Deposit
-                    3) Withdraw
-                    4) Transfer
-                    5) Account Statement
-                    6) List Accounts
-                    7) Search Accounts By Customer Name
-                    0) Exit                    
-                    """);
-
-            System.out.println("CHOOSE: ");
+            ConsoleUI.printMenu();
+            ConsoleUI.prompt("Choose an option");
             String choice = scanner.nextLine().trim();
-            System.out.println("Choice : " + choice);
 
             switch (choice) {
-                case "0" -> running = false;
+                case "0" -> {
+                    running = false;
+                    ConsoleUI.goodbye();
+                }
                 case "1" -> openAccount(scanner, bankService);
                 case "2" -> deposit(scanner, bankService);
                 case "3" -> withdraw(scanner, bankService);
                 case "4" -> transfer(scanner, bankService);
                 case "5" -> statement(scanner, bankService);
-                case "6" -> listAccounts(scanner, bankService);
+                case "6" -> listAccounts(bankService);
                 case "7" -> searchAccounts(scanner, bankService);
-
+                default -> ConsoleUI.error("Invalid option. Please choose 0-7.");
             }
         }
+        scanner.close();
     }
 
     private static void openAccount(Scanner scanner, BankService bankService) {
-        System.out.println("Customer name: ");
+        ConsoleUI.section("Open Account");
+        ConsoleUI.prompt("Customer name");
         String name = scanner.nextLine().trim();
-        System.out.println("Customer email: ");
+        ConsoleUI.prompt("Customer email");
         String email = scanner.nextLine().trim();
-        System.out.println("Account Type (SAVINGS/CURRENT: ");
+        ConsoleUI.prompt("Account type (SAVINGS / CURRENT)");
         String type = scanner.nextLine().trim();
-        System.out.println("Initial deposit (optional, blank for 0): ");
+        ConsoleUI.prompt("Initial deposit (optional, blank for 0)");
         String amountStr = scanner.nextLine().trim();
+
         double initial = 0;
         if (!amountStr.isEmpty()) {
             try {
                 initial = Double.parseDouble(amountStr);
             } catch (NumberFormatException e) {
-                System.out.println("Invalid number; opening with 0 balance.");
+                ConsoleUI.warn("Invalid number; opening with $0.00 balance.");
             }
         }
         if (initial < 0) {
-            System.out.println("Initial deposit cannot be negative; using 0.");
+            ConsoleUI.warn("Initial deposit cannot be negative; using $0.00.");
             initial = 0;
         }
-        String accountNumber = bankService.openAccount(name, email, type);
-        if (initial > 0) {
-            try {
-                bankService.deposit(accountNumber, initial, "Initial Deposit");
-            } catch (IllegalArgumentException e) {
-                System.out.println(e.getMessage());
-            }
-        }
-        System.out.println("Account opened: " + accountNumber);
 
+        try {
+            String accountNumber = bankService.openAccount(name, email, type);
+            if (initial > 0) {
+                try {
+                    bankService.deposit(accountNumber, initial, "Initial Deposit");
+                } catch (ValidationException e) {
+                    ConsoleUI.error(e.getMessage());
+                }
+            }
+            ConsoleUI.success("Account opened: " + accountNumber);
+        } catch (RuntimeException e) {
+            ConsoleUI.error(e.getMessage());
+        }
     }
 
     private static void deposit(Scanner scanner, BankService bankService) {
-        System.out.println("Account number: ");
+        ConsoleUI.section("Deposit");
+        ConsoleUI.prompt("Account number");
         String accountNumber = scanner.nextLine().trim();
-        System.out.println("Amount: ");
+        ConsoleUI.prompt("Amount");
         String amountStr = scanner.nextLine().trim();
+
         try {
-            double parsed = Double.parseDouble(amountStr);
-            bankService.deposit(accountNumber, parsed, "Deposit");
-            System.out.println("Deposited");
+            double amount = Double.parseDouble(amountStr);
+            bankService.deposit(accountNumber, amount, "Deposit");
+            ConsoleUI.success("Deposited " + ConsoleUI.formatMoney(amount) + " into " + accountNumber);
         } catch (NumberFormatException e) {
-            System.out.println("Invalid amount.");
-        } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
+            ConsoleUI.error("Invalid amount.");
         } catch (RuntimeException e) {
-            System.out.println(e.getMessage());
+            ConsoleUI.error(e.getMessage());
         }
     }
 
-
     private static void withdraw(Scanner scanner, BankService bankService) {
-        System.out.println("Account number: ");
+        ConsoleUI.section("Withdraw");
+        ConsoleUI.prompt("Account number");
         String accountNumber = scanner.nextLine().trim();
-        System.out.println("Amount: ");
+        ConsoleUI.prompt("Amount");
         String amountStr = scanner.nextLine().trim();
+
         try {
-            double parsed = Double.parseDouble(amountStr);
-            bankService.withdraw(accountNumber, parsed, "Withdrawal");
-            System.out.println("Withdrawn");
+            double amount = Double.parseDouble(amountStr);
+            bankService.withdraw(accountNumber, amount, "Withdrawal");
+            ConsoleUI.success("Withdrew " + ConsoleUI.formatMoney(amount) + " from " + accountNumber);
         } catch (NumberFormatException e) {
-            System.out.println("Invalid amount.");
-        } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
+            ConsoleUI.error("Invalid amount.");
         } catch (RuntimeException e) {
-            System.out.println(e.getMessage());
+            ConsoleUI.error(e.getMessage());
         }
     }
 
     private static void transfer(Scanner scanner, BankService bankService) {
-        System.out.println("From Account: ");
+        ConsoleUI.section("Transfer");
+        ConsoleUI.prompt("From account");
         String from = scanner.nextLine().trim();
-        System.out.println("To Account: ");
+        ConsoleUI.prompt("To account");
         String to = scanner.nextLine().trim();
-        System.out.println("Amount: ");
-        Double amount = Double.valueOf(scanner.nextLine().trim());
-        bankService.transfer(from, to, amount, "Transfer");
+        ConsoleUI.prompt("Amount");
+        String amountStr = scanner.nextLine().trim();
+
+        try {
+            double amount = Double.parseDouble(amountStr);
+            bankService.transfer(from, to, amount, "Transfer");
+            ConsoleUI.success("Transferred " + ConsoleUI.formatMoney(amount) + " from " + from + " to " + to);
+        } catch (NumberFormatException e) {
+            ConsoleUI.error("Invalid amount.");
+        } catch (ValidationException | RuntimeException e) {
+            ConsoleUI.error(e.getMessage());
+        }
     }
 
     private static void statement(Scanner scanner, BankService bankService) {
-        System.out.println("Account number: ");
+        ConsoleUI.prompt("Account number");
         String account = scanner.nextLine().trim();
-        bankService.getStatement(account).forEach(t -> {
-            System.out.println(t.getTimestamp() + " | " + t.getType() + " | " + t.getAmount() + " | " + t.getNote());
-        });
+        try {
+            List<Transaction> transactions = bankService.getStatement(account);
+            ConsoleUI.printStatement(account, transactions);
+        } catch (RuntimeException e) {
+            ConsoleUI.error(e.getMessage());
+        }
     }
 
-    private static void listAccounts(Scanner scanner, BankService bankService) {
-        bankService.listAccounts().forEach(a -> {
-            System.out.println(a.getAccountNumber() + " | " + a.getAccountType() + " | " + a.getBalance());
-        });
+    private static void listAccounts(BankService bankService) {
+        List<Account> accounts = bankService.listAccounts();
+        ConsoleUI.printAccounts(accounts, "All Accounts");
     }
 
     private static void searchAccounts(Scanner scanner, BankService bankService) {
-        System.out.println("Customer name Contains: ");
+        ConsoleUI.section("Search Accounts");
+        ConsoleUI.prompt("Customer name contains");
         String q = scanner.nextLine().trim();
         List<Account> results = bankService.searchAccountByCustomerName(q);
         if (results.isEmpty()) {
-            System.out.println("No accounts found.");
+            ConsoleUI.info("No accounts found for \"" + q + "\".");
             return;
         }
-        results.forEach(account ->
-                System.out.println(account.getAccountNumber() + " | " + account.getAccountType() + " | " + account.getBalance())
-        );
+        ConsoleUI.printAccounts(results, "Search Results");
     }
 }
